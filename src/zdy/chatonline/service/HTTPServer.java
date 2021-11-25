@@ -20,7 +20,7 @@ public class HTTPServer {
         tomcat.setPort(port);
         tomcat.getConnector();
 
-        Context ctx = tomcat.addWebapp("", new File(Constant.configs.getString("DIRECTORY_PREFIX")).
+        Context ctx = tomcat.addWebapp("", new File(Constant.configs.getString("WEB_DIRECTORY_PREFIX")).
                 getAbsolutePath());
         Tomcat.addServlet(ctx, "Main", new MainServlet());
         Tomcat.addServlet(ctx, "Error", new ErrorServlet());

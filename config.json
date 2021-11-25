@@ -1,5 +1,5 @@
 {
-  "PORT": 10047,
+  "PORT": 80,
   "WEB_DIRECTORY_PREFIX": "C:\\###\\Web\\RebootWeb",
   "LOG_MAX_NUMBER": 7,
   "Error_Page": [

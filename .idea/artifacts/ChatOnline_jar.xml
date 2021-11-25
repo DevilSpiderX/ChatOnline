@@ -1,0 +1,16 @@
+<component name="ArtifactManager">
+  <artifact name="ChatOnline:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/ChatOnline_jar</output-path>
+    <root id="root">
+      <element id="archive" name="ChatOnline.jar">
+        <element id="module-output" name="ChatOnline" />
+      </element>
+      <element id="directory" name="lib">
+        <element id="library" level="project" name="bee-1.9.5" />
+        <element id="library" level="project" name="fastjson-1.2.76" />
+        <element id="library" level="project" name="mysql-connector-java-8.0.22" />
+        <element id="library" level="project" name="tomcat" />
+      </element>
+    </root>
+  </artifact>
+</component>

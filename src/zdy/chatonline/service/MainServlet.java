@@ -100,6 +100,7 @@ public class MainServlet extends HttpServlet {
                 + req.getRemotePort() + "） POST " + path + " " + req.getProtocol() + " " + reqBody);
 
         switch (path) {
+
             /*
                 应包含参数：uid, pwd
                 返回代码：0 成功；1 密码错误；2 uid参数不存在；3 pwd参数不存在;
@@ -130,7 +131,8 @@ public class MainServlet extends HttpServlet {
                         cookieSId.setMaxAge(maxAge);
                         cookieSId.setPath("/");
                         resp.addCookie(cookieSId);
-                        respBody.add("{\"code\": \"0\",\"msg\": \"" + user.getNickname() + "登录成功\"}");
+                        respBody.add("{\"code\": \"0\",\"msg\": \"" + user.getNickname() + "（" + user.getUid() +
+                                "）登录成功\"}");
                         break;
                     }
                 }
@@ -154,7 +156,7 @@ public class MainServlet extends HttpServlet {
                     resp.addCookie(cookieSId);
                     respBody.add("{\"code\": \"0\",\"msg\": \"" + session.getAttribute("uid") + "登出成功\"}");
                 } else {
-                    respBody.add("{\"code\": \"1\",\"msg\": \"该sessionId（" + session.getId() + "）还未登录过\"}");
+                    respBody.add("{\"code\": \"1\",\"msg\": \"该用户未登录\"}");
                 }
                 break;
             }

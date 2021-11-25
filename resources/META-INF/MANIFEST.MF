@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Main-Class: zdy.chatonline.Main
+Class-Path: lib/tomcat-embed-core.jar lib/tomcat-embed-websocket.jar lib
+ /tomcat-embed-programmatic.jar lib/tomcat-embed-jasper.jar lib/ecj-4.20
+ .jar lib/annotations-api.jar lib/tomcat-embed-el.jar lib/tomcat-dbcp.ja
+ r lib/fastjson-1.2.76.jar lib/mysql-connector-java-8.0.22.jar lib/bee-1
+ .9.5.jar lib/honey-1.9.5.jar lib/bee-ext-1.9.5.jar
+

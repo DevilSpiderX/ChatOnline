@@ -1,0 +1,15 @@
+{
+  "PORT": 10047,
+  "WEB_DIRECTORY_PREFIX": "C:\\###\\Web\\RebootWeb",
+  "LOG_MAX_NUMBER": 7,
+  "Error_Page": [
+    {
+      "CODE": 404,
+      "LOCATION": "/error/404.html"
+    },
+    {
+      "CODE": 500,
+      "LOCATION": "/error/500.html"
+    }
+  ]
+}

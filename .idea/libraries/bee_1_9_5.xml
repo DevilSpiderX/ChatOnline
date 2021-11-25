@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="bee-1.9.5">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../../MyDownloads/Java/bee/bee-1.9.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../MyDownloads/Java/bee/bee-ext-1.9.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../MyDownloads/Java/bee/honey-1.9.5.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../../../MyDownloads/Java/bee/bee-1.9.5-javadoc.zip!/" />
+    </JAVADOC>
+    <SOURCES />
+  </library>
+</component>

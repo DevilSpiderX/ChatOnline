@@ -1,0 +1,20 @@
+<component name="libraryTable">
+  <library name="tomcat">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../../MyDownloads/Java/tomcat/annotations-api.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../MyDownloads/Java/tomcat/ecj-4.20.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../MyDownloads/Java/tomcat/tomcat-dbcp.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../MyDownloads/Java/tomcat/tomcat-embed-core.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../MyDownloads/Java/tomcat/tomcat-embed-el.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../MyDownloads/Java/tomcat/tomcat-embed-jasper.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../MyDownloads/Java/tomcat/tomcat-embed-programmatic.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../MyDownloads/Java/tomcat/tomcat-embed-websocket.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="https://tomcat.apache.org/tomcat-9.0-doc/api/" />
+      <root url="https://tomcat.apache.org/tomcat-9.0-doc/servletapi/" />
+      <root url="https://tomcat.apache.org/tomcat-9.0-doc/websocketapi/" />
+    </JAVADOC>
+    <SOURCES />
+  </library>
+</component>

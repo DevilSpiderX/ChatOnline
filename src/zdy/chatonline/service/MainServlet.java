@@ -1,12 +1,16 @@
 package zdy.chatonline.service;
 
 import com.alibaba.fastjson.JSONObject;
+import org.teasoft.bee.osql.Condition;
+import org.teasoft.bee.osql.Op;
 import org.teasoft.bee.osql.SuidRich;
 import org.teasoft.honey.osql.core.BeeFactory;
+import org.teasoft.honey.osql.core.ConditionImpl;
 import zdy.chatonline.Constant;
 import zdy.chatonline.log.Log;
 import zdy.chatonline.service.request.RequestBody;
 import zdy.chatonline.service.response.ResponseBody;
+import zdy.chatonline.sql.Friends;
 import zdy.chatonline.sql.User;
 
 import javax.servlet.annotation.WebServlet;
@@ -18,14 +22,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 @WebServlet(urlPatterns = "/*", name = "Main")
 public class MainServlet extends HttpServlet {
     private final static Log log = new Log();
     private int counter = 0;
+    private static final Map<String, HttpSession> UID_SESSION = new HashMap<>();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -102,8 +105,10 @@ public class MainServlet extends HttpServlet {
         switch (path) {
 
             /*
+                登录
+
                 应包含参数：uid, pwd
-                返回代码：0 成功；1 密码错误；2 uid参数不存在；3 pwd参数不存在;
+                返回代码：0 成功；1 密码错误；2 uid参数不存在；3 pwd参数不存在;4 uid不存在；
              */
             case "/login": {
                 resp.setStatus(HttpServletResponse.SC_OK);
@@ -119,44 +124,147 @@ public class MainServlet extends HttpServlet {
                 }
 
                 SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
-                User qUser = new User(reqBody.getString("uid"));
+                String uid = reqBody.getString("uid");
+                String pwd = reqBody.getString("pwd");
+                User qUser = new User(uid);
                 List<User> users = suidRich.select(qUser, "uid,password,nickname");
-                for (User user : users) {
-                    if (reqBody.get("pwd").equals(user.getPassword())) {
+                if (users.size() == 0) {
+                    respBody.add("{\"code\": \"4\",\"msg\": \"uid不存在\"}");
+                } else {
+                    User user = users.get(0);
+                    if (pwd.equals(user.getPassword())) {
+                        HttpSession oldSession;
+                        if ((oldSession = getUidSession(uid)) != null) {
+                            oldSession.setAttribute("loggedIn", false);
+                            oldSession.setMaxInactiveInterval(5);
+                        }
                         int maxAge = 10 * 60 * 60;//10小时
                         session.setMaxInactiveInterval(maxAge);
                         session.setAttribute("loggedIn", true);
-                        session.setAttribute("uid", user.getUid());
+                        session.setAttribute("uid", uid);
+                        session.setAttribute("address", req.getRemoteAddr() + ":" + req.getRemotePort());
                         Cookie cookieSId = new Cookie("JSESSIONID", session.getId());
                         cookieSId.setMaxAge(maxAge);
                         cookieSId.setPath("/");
                         resp.addCookie(cookieSId);
+                        UID_SESSION.put(uid, session);
                         respBody.add("{\"code\": \"0\",\"msg\": \"" + user.getNickname() + "（" + user.getUid() +
                                 "）登录成功\"}");
-                        break;
+                    } else {
+                        respBody.add("{\"code\": \"1\",\"msg\": \"密码错误\"}");
                     }
-                }
-                if (!isLoggedIn(session)) {
-                    respBody.add("{\"code\": \"1\",\"msg\": \"密码错误\"}");
                 }
                 break;
             }
             /*
+                登出
+
                 返回代码：0 成功；1 还未登录；
              */
             case "/logout": {
                 resp.setStatus(HttpServletResponse.SC_OK);
                 resp.addHeader("Content-type", "application/json");
                 if (isLoggedIn(session)) {
-                    session.setMaxInactiveInterval(1);
+                    UID_SESSION.remove((String) session.getAttribute("uid"));
                     session.setAttribute("loggedIn", false);
-                    Cookie cookieSId = new Cookie("JSESSIONID", session.getId());
-                    cookieSId.setMaxAge(1);
-                    cookieSId.setPath("/");
-                    resp.addCookie(cookieSId);
+                    session.invalidate();
+
                     respBody.add("{\"code\": \"0\",\"msg\": \"" + session.getAttribute("uid") + "登出成功\"}");
                 } else {
                     respBody.add("{\"code\": \"1\",\"msg\": \"该用户未登录\"}");
+                }
+                break;
+            }
+            /*
+                注册
+
+                应包含参数：uid, pwd [,nick, age, gender, intro]
+                返回代码：0 成功；1 失败；2 uid已存在；3 uid参数不存在；4 pwd参数不存在;
+             */
+            case "/register": {
+                resp.setStatus(HttpServletResponse.SC_OK);
+                resp.addHeader("Content-type", "application/json");
+
+                if (!reqBody.contains("uid")) {
+                    respBody.add("{\"code\": \"3\",\"msg\": \"uid参数不存在\"}");
+                    break;
+                }
+                if (!reqBody.contains("pwd")) {
+                    respBody.add("{\"code\": \"4\",\"msg\": \"pwd参数不存在\"}");
+                    break;
+                }
+
+                SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
+                String uid = reqBody.getString("uid");
+                User qUser = new User(uid);
+                if (suidRich.exist(qUser)) {
+                    respBody.add("{\"code\": \"2\",\"msg\": \"该用户名（" + uid + "）已存在\"}");
+                } else {
+                    String password = reqBody.getString("pwd");
+                    String nickName = uid, gender = "", introduction = "";
+                    int age = 0;
+                    if (reqBody.contains("nick")) {
+                        nickName = reqBody.getString("nick");
+                    }
+                    if (reqBody.contains("age")) {
+                        if (reqBody.get("age") instanceof Integer) {
+                            age = (Integer) reqBody.get("age");
+                        } else {
+                            age = Integer.parseInt(reqBody.getString("age"));
+                        }
+                    }
+                    if (reqBody.contains("gender")) {
+                        gender = reqBody.getString("gender");
+                    }
+                    if (reqBody.contains("intro")) {
+                        introduction = reqBody.getString("intro");
+                    }
+                    if (User.add_user(uid, password, nickName, age, gender, introduction) > 0) {
+                        respBody.add("{\"code\": \"0\",\"msg\": \"注册成功\"}");
+                    } else {
+                        respBody.add("{\"code\": \"1\",\"msg\": \"注册失败，数据库插入失败\"}");
+                    }
+                }
+                break;
+            }
+            /*
+                删除好友
+
+                应包含参数：own_uid, friend_uid
+                返回代码：0 成功；1 失败；2 own_uid参数不存在；3 friend_uid参数不存在;4 没有权限；
+             */
+            case "/deleteFriend": {
+                resp.setStatus(HttpServletResponse.SC_OK);
+                resp.addHeader("Content-type", "application/json");
+
+                if (!reqBody.contains("own_uid")) {
+                    respBody.add("{\"code\": \"2\",\"msg\": \"own_uid参数不存在\"}");
+                    break;
+                }
+                if (!reqBody.contains("friend_uid")) {
+                    respBody.add("{\"code\": \"3\",\"msg\": \"friend_uid参数不存在\"}");
+                    break;
+                }
+                if (!isLoggedIn(session)) {
+                    respBody.add("{\"code\": \"4\",\"msg\": \"没有权限，请登录\"}");
+                    break;
+                }
+
+                SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
+                String own_uid = reqBody.getString("own_uid");
+                String friend_uid = reqBody.getString("friend_uid");
+                Condition con = new ConditionImpl();
+                con.op("own_uid", Op.equal, own_uid).and().op("friend_uid", Op.equal, friend_uid).or()
+                        .op("own_uid", Op.equal, friend_uid).and().op("friend_uid", Op.equal, own_uid);
+                List<Friends> friendsList = suidRich.select(new Friends(), con);
+
+                if (friendsList.size() == 2) {
+                    for (Friends friends : friendsList) {
+                        suidRich.delete(friends);
+                    }
+                    respBody.add("{\"code\": \"0\",\"msg\": \"删除成功\"}");
+                } else {
+                    respBody.add("{\"code\": \"1\",\"msg\": \"删除失败\"}");
                 }
                 break;
             }
@@ -204,5 +312,9 @@ public class MainServlet extends HttpServlet {
 
     public boolean isLoggedIn(HttpSession session) {
         return session.getAttribute("loggedIn") != null && (Boolean) session.getAttribute("loggedIn");
+    }
+
+    public static HttpSession getUidSession(String uid) {
+        return UID_SESSION.get(uid);
     }
 }

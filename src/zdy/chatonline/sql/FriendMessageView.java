@@ -1,5 +1,8 @@
 package zdy.chatonline.sql;
 
+import org.teasoft.bee.osql.SuidRich;
+import org.teasoft.honey.osql.core.BeeFactory;
+
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Objects;
@@ -88,5 +91,12 @@ public class FriendMessageView implements Serializable {
                 ", time=" + time +
                 ", senderUid='" + senderUid + '\'' +
                 '}';
+    }
+
+    public static void main(String[] args) {
+        SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
+        for (FriendMessageView messageView : suidRich.select(new FriendMessageView())) {
+            System.out.println(messageView);
+        }
     }
 }

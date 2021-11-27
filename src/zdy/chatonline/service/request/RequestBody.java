@@ -270,7 +270,6 @@ public class RequestBody {
      * @param key 要判断的参数名
      * @return 如果存在该请求体参数名，则返回true；否则，返回false
      */
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean contains(String key) {
         switch (method) {
             case x_www_form_urlencoded:

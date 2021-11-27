@@ -1,6 +1,6 @@
 {
   "PORT": 80,
-  "WEB_DIRECTORY_PREFIX": "C:\\###\\Web\\RebootWeb",
+  "WEB_DIRECTORY_PREFIX": "C:\\###\\Web\\ChatOnlineWeb",
   "LOG_MAX_NUMBER": 7,
   "Error_Page": [
     {

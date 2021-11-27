@@ -1,5 +1,8 @@
 package zdy.chatonline.sql;
 
+import org.teasoft.bee.osql.SuidRich;
+import org.teasoft.honey.osql.core.BeeFactory;
+
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Objects;
@@ -86,5 +89,12 @@ public class MessageRecord implements Serializable {
                 ", senderUid='" + senderUid + '\'' +
                 ", receiverUid='" + receiverUid + '\'' +
                 '}';
+    }
+
+    public static void main(String[] args) {
+        SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
+        for (MessageRecord record : suidRich.select(new MessageRecord())) {
+            System.out.println(record);
+        }
     }
 }

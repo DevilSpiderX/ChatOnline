@@ -1,5 +1,8 @@
 package zdy.chatonline.sql;
 
+import org.teasoft.bee.osql.SuidRich;
+import org.teasoft.honey.osql.core.BeeFactory;
+
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -56,5 +59,12 @@ public class Friends implements Serializable {
                 ", ownUid='" + ownUid + '\'' +
                 ", friendUid='" + friendUid + '\'' +
                 '}';
+    }
+
+    public static void main(String[] args) {
+        SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
+        for (Friends friends : suidRich.select(new Friends())) {
+            System.out.println(friends);
+        }
     }
 }

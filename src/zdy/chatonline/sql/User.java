@@ -1,5 +1,9 @@
 package zdy.chatonline.sql;
 
+import org.teasoft.bee.osql.SuidRich;
+import org.teasoft.honey.osql.core.BeeFactory;
+import org.teasoft.honey.osql.core.CallableSqlLib;
+
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -92,5 +96,18 @@ public class User implements Serializable {
                 ", gender='" + gender + '\'' +
                 ", introduction='" + introduction + '\'' +
                 '}';
+    }
+
+    public static int add_user(String uid, String password, String nickname, int age, String gender, String introduction) {
+        CallableSqlLib call = new CallableSqlLib();
+        return call.modify("add_user(?,?,?,?,?,?)",
+                new Object[]{uid, password, nickname, age, gender, introduction});
+    }
+
+    public static void main(String[] args) {
+        SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
+        for (User user : suidRich.select(new User())) {
+            System.out.println(user);
+        }
     }
 }

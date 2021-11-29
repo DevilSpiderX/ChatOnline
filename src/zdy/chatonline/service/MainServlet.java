@@ -28,7 +28,7 @@ import java.util.*;
 public class MainServlet extends HttpServlet {
     private final static Log log = new Log();
     private int counter = 0;
-    private static final Map<String, HttpSession> UID_SESSION = new HashMap<>();
+    private static final Map<String, HttpSession> UID_SESSION_TO_WS = new HashMap<>();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -114,12 +114,17 @@ public class MainServlet extends HttpServlet {
                 resp.setStatus(HttpServletResponse.SC_OK);
                 resp.addHeader("Content-type", "application/json");
 
+                JSONObject respJson = new JSONObject();
                 if (!reqBody.contains("uid")) {
-                    respBody.add("{\"code\": \"2\",\"msg\": \"uid参数不存在\"}");
+                    respJson.put("code", "2");
+                    respJson.put("msg", "uid参数不存在");
+                    respBody.add(respJson.toJSONString());
                     break;
                 }
                 if (!reqBody.contains("pwd")) {
-                    respBody.add("{\"code\": \"3\",\"msg\": \"pwd参数不存在\"}");
+                    respJson.put("code", "3");
+                    respJson.put("msg", "pwd参数不存在");
+                    respBody.add(respJson.toJSONString());
                     break;
                 }
 
@@ -129,7 +134,8 @@ public class MainServlet extends HttpServlet {
                 User qUser = new User(uid);
                 List<User> users = suidRich.select(qUser, "uid,password,nickname");
                 if (users.size() == 0) {
-                    respBody.add("{\"code\": \"4\",\"msg\": \"uid不存在\"}");
+                    respJson.put("code", "4");
+                    respJson.put("msg", "uid不存在");
                 } else {
                     User user = users.get(0);
                     if (pwd.equals(user.getPassword())) {
@@ -142,18 +148,20 @@ public class MainServlet extends HttpServlet {
                         session.setMaxInactiveInterval(maxAge);
                         session.setAttribute("loggedIn", true);
                         session.setAttribute("uid", uid);
-                        session.setAttribute("address", req.getRemoteAddr() + ":" + req.getRemotePort());
+                        session.setAttribute("address", req.getRemoteAddr());
                         Cookie cookieSId = new Cookie("JSESSIONID", session.getId());
                         cookieSId.setMaxAge(maxAge);
                         cookieSId.setPath("/");
                         resp.addCookie(cookieSId);
-                        UID_SESSION.put(uid, session);
-                        respBody.add("{\"code\": \"0\",\"msg\": \"" + user.getNickname() + "（" + user.getUid() +
-                                "）登录成功\"}");
+                        UID_SESSION_TO_WS.put(uid, session);
+                        respJson.put("code", "0");
+                        respJson.put("msg", user.getNickname() + "（" + user.getUid() + "）登录成功");
                     } else {
-                        respBody.add("{\"code\": \"1\",\"msg\": \"密码错误\"}");
+                        respJson.put("code", "1");
+                        respJson.put("msg", "密码错误");
                     }
                 }
+                respBody.add(respJson.toJSONString());
                 break;
             }
             /*
@@ -164,15 +172,19 @@ public class MainServlet extends HttpServlet {
             case "/logout": {
                 resp.setStatus(HttpServletResponse.SC_OK);
                 resp.addHeader("Content-type", "application/json");
+
+                JSONObject respJson = new JSONObject();
                 if (isLoggedIn(session)) {
-                    UID_SESSION.remove((String) session.getAttribute("uid"));
                     session.setAttribute("loggedIn", false);
                     session.invalidate();
 
-                    respBody.add("{\"code\": \"0\",\"msg\": \"" + session.getAttribute("uid") + "登出成功\"}");
+                    respJson.put("code", "0");
+                    respJson.put("msg", session.getAttribute("uid") + "登出成功");
                 } else {
-                    respBody.add("{\"code\": \"1\",\"msg\": \"该用户未登录\"}");
+                    respJson.put("code", "1");
+                    respJson.put("msg", "该用户未登录");
                 }
+                respBody.add(respJson.toJSONString());
                 break;
             }
             /*
@@ -185,12 +197,17 @@ public class MainServlet extends HttpServlet {
                 resp.setStatus(HttpServletResponse.SC_OK);
                 resp.addHeader("Content-type", "application/json");
 
+                JSONObject respJson = new JSONObject();
                 if (!reqBody.contains("uid")) {
-                    respBody.add("{\"code\": \"3\",\"msg\": \"uid参数不存在\"}");
+                    respJson.put("code", "3");
+                    respJson.put("msg", "uid参数不存在");
+                    respBody.add(respJson.toJSONString());
                     break;
                 }
                 if (!reqBody.contains("pwd")) {
-                    respBody.add("{\"code\": \"4\",\"msg\": \"pwd参数不存在\"}");
+                    respJson.put("code", "4");
+                    respJson.put("msg", "pwd参数不存在");
+                    respBody.add(respJson.toJSONString());
                     break;
                 }
 
@@ -198,7 +215,8 @@ public class MainServlet extends HttpServlet {
                 String uid = reqBody.getString("uid");
                 User qUser = new User(uid);
                 if (suidRich.exist(qUser)) {
-                    respBody.add("{\"code\": \"2\",\"msg\": \"该用户名（" + uid + "）已存在\"}");
+                    respJson.put("code", "2");
+                    respJson.put("msg", "该用户名（" + uid + "）已存在");
                 } else {
                     String password = reqBody.getString("pwd");
                     String nickName = uid, gender = "", introduction = "";
@@ -220,11 +238,14 @@ public class MainServlet extends HttpServlet {
                         introduction = reqBody.getString("intro");
                     }
                     if (User.add_user(uid, password, nickName, age, gender, introduction) > 0) {
-                        respBody.add("{\"code\": \"0\",\"msg\": \"注册成功\"}");
+                        respJson.put("code", "0");
+                        respJson.put("msg", "注册成功");
                     } else {
-                        respBody.add("{\"code\": \"1\",\"msg\": \"注册失败，数据库插入失败\"}");
+                        respJson.put("code", "1");
+                        respJson.put("msg", "注册失败，数据库插入失败");
                     }
                 }
+                respBody.add(respJson.toJSONString());
                 break;
             }
             /*
@@ -237,16 +258,23 @@ public class MainServlet extends HttpServlet {
                 resp.setStatus(HttpServletResponse.SC_OK);
                 resp.addHeader("Content-type", "application/json");
 
+                JSONObject respJson = new JSONObject();
                 if (!reqBody.contains("own_uid")) {
-                    respBody.add("{\"code\": \"2\",\"msg\": \"own_uid参数不存在\"}");
+                    respJson.put("code", "2");
+                    respJson.put("msg", "own_uid参数不存在");
+                    respBody.add(respJson.toJSONString());
                     break;
                 }
                 if (!reqBody.contains("friend_uid")) {
-                    respBody.add("{\"code\": \"3\",\"msg\": \"friend_uid参数不存在\"}");
+                    respJson.put("code", "3");
+                    respJson.put("msg", "friend_uid参数不存在");
+                    respBody.add(respJson.toJSONString());
                     break;
                 }
                 if (!isLoggedIn(session)) {
-                    respBody.add("{\"code\": \"4\",\"msg\": \"没有权限，请登录\"}");
+                    respJson.put("code", "4");
+                    respJson.put("msg", "没有权限，请登录");
+                    respBody.add(respJson.toJSONString());
                     break;
                 }
 
@@ -262,10 +290,13 @@ public class MainServlet extends HttpServlet {
                     for (Friends friends : friendsList) {
                         suidRich.delete(friends);
                     }
-                    respBody.add("{\"code\": \"0\",\"msg\": \"删除成功\"}");
+                    respJson.put("code", "0");
+                    respJson.put("msg", "删除成功");
                 } else {
-                    respBody.add("{\"code\": \"1\",\"msg\": \"删除失败\"}");
+                    respJson.put("code", "1");
+                    respJson.put("msg", "删除失败");
                 }
+                respBody.add(respJson.toJSONString());
                 break;
             }
             default: {
@@ -315,6 +346,11 @@ public class MainServlet extends HttpServlet {
     }
 
     public static HttpSession getUidSession(String uid) {
-        return UID_SESSION.get(uid);
+        if (UID_SESSION_TO_WS.containsKey(uid)) {
+            HttpSession session = UID_SESSION_TO_WS.get(uid);
+            UID_SESSION_TO_WS.remove(uid);
+            return session;
+        }
+        return null;
     }
 }

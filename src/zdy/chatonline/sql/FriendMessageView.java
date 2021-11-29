@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Objects;
 
-public class FriendMessageView implements Serializable {
+public class FriendMessageView implements Serializable, Comparable<FriendMessageView> {
 
     private static final long serialVersionUID = 1599933065743L;
 
@@ -91,6 +91,15 @@ public class FriendMessageView implements Serializable {
                 ", time=" + time +
                 ", senderUid='" + senderUid + '\'' +
                 '}';
+    }
+
+    @Override
+    public int compareTo(FriendMessageView o) {
+        if (this.time != null) {
+            return this.time.compareTo(o.time);
+        } else {
+            return 0;
+        }
     }
 
     public static void main(String[] args) {

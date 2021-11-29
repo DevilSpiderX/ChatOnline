@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Objects;
 
-public class MessageRecord implements Serializable {
+public class MessageRecord implements Serializable, Comparable<MessageRecord> {
 
     private static final long serialVersionUID = 1596161788907L;
 
@@ -91,6 +91,17 @@ public class MessageRecord implements Serializable {
                 '}';
     }
 
+    @Override
+    public int compareTo(MessageRecord o) {
+        if (this.id != null) {
+            return this.id.compareTo(o.id);
+        } else if (this.time != null) {
+            return this.time.compareTo(o.time);
+        } else {
+            return 0;
+        }
+    }
+
     public static void main(String[] args) {
         SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
         for (MessageRecord record : suidRich.select(new MessageRecord())) {
@@ -98,3 +109,4 @@ public class MessageRecord implements Serializable {
         }
     }
 }
+

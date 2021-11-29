@@ -71,6 +71,7 @@ public class COWebSocket {
 
         address = (String) httpSession.getAttribute("address");
         print(address, "客户端" + this.uid + "接入");
+        print(address, "当前在线用户数为：" + getOnlineCount());
         appendLog("客户端" + this.uid + "接入");
         /*
             接收者接收的信息中的cmd为acceptMessage
@@ -105,6 +106,7 @@ public class COWebSocket {
         webSocketMap.remove(uid);
         subOnlineCount();
         print(address, "客户端" + this.uid + "退出");
+        print(address, "当前在线用户数为：" + getOnlineCount());
         appendLog("客户端" + this.uid + "退出");
     }
 

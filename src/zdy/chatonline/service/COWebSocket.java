@@ -142,25 +142,6 @@ public class COWebSocket {
         if (isLoggedIn()) {
             switch (cmd) {
             /*
-                添加好友
-
-                应包含参数：friend_uid
-                返回代码：0 成功；1 失败；2 friend_uid参数不存在;
-             */
-                case "addFriend": {
-                    JSONObject respJson = new JSONObject();
-                    if (!data.containsKey("friend_uid")) {
-                        respJson.put("cmd", cmd);
-                        respJson.put("code", "2");
-                        respJson.put("msg", "friend_uid参数不存在");
-                        sendMessage(respJson.toJSONString());
-                        break;
-                    }
-                    //未完成
-
-                    break;
-                }
-            /*
                 发送信息
 
                 应包含参数：receiver_uid, msg

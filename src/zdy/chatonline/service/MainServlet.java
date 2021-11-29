@@ -103,7 +103,6 @@ public class MainServlet extends HttpServlet {
                 + req.getRemotePort() + "） POST " + path + " " + req.getProtocol() + " " + reqBody);
 
         switch (path) {
-
             /*
                 登录
 
@@ -244,6 +243,57 @@ public class MainServlet extends HttpServlet {
                         respJson.put("code", "1");
                         respJson.put("msg", "注册失败，数据库插入失败");
                     }
+                }
+                respBody.add(respJson.toJSONString());
+                break;
+            }
+            /*
+                添加好友
+
+                应包含参数：own_uid, friend_uid
+                返回代码：0 成功；1 失败；2 own_uid参数不存在；3 friend_uid参数不存在;4 没有权限；
+             */
+            case "/addFriend": {
+                resp.setStatus(HttpServletResponse.SC_OK);
+                resp.addHeader("Content-type", "application/json");
+
+                JSONObject respJson = new JSONObject();
+                if (!reqBody.contains("own_uid")) {
+                    respJson.put("code", "2");
+                    respJson.put("msg", "own_uid参数不存在");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+                if (!reqBody.contains("friend_uid")) {
+                    respJson.put("code", "3");
+                    respJson.put("msg", "friend_uid参数不存在");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+                if (!isLoggedIn(session)) {
+                    respJson.put("code", "4");
+                    respJson.put("msg", "没有权限，请登录");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+
+                SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
+                String own_uid = reqBody.getString("own_uid");
+                String friend_uid = reqBody.getString("friend_uid");
+
+                Friends[] friends = new Friends[]{new Friends(), new Friends()};
+                friends[0].setOwnUid(own_uid);
+                friends[0].setFriendUid(friend_uid);
+                friends[1].setOwnUid(friend_uid);
+                friends[1].setFriendUid(own_uid);
+
+                int count = suidRich.insert(friends);
+                if (count == 2) {
+                    respJson.put("code", "0");
+                    respJson.put("msg", "添加成功");
+                } else {
+                    respJson.put("code", "1");
+                    respJson.put("msg", "添加失败");
                 }
                 respBody.add(respJson.toJSONString());
                 break;

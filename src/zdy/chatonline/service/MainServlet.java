@@ -1,5 +1,6 @@
 package zdy.chatonline.service;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.teasoft.bee.osql.Condition;
 import org.teasoft.bee.osql.Op;
@@ -11,6 +12,7 @@ import zdy.chatonline.log.Log;
 import zdy.chatonline.service.request.RequestBody;
 import zdy.chatonline.service.request.RequestQuery;
 import zdy.chatonline.service.response.ResponseBody;
+import zdy.chatonline.sql.FriendMessageView;
 import zdy.chatonline.sql.Friends;
 import zdy.chatonline.sql.User;
 
@@ -44,7 +46,7 @@ public class MainServlet extends HttpServlet {
 
         if (path.equals("/")) {
             if (isLoggedIn(session)) {
-                resp.sendRedirect("/index.html?uid=" + session.getAttribute("uid"));
+                resp.sendRedirect("/panel.html?uid=" + session.getAttribute("uid"));
             } else {
                 resp.sendRedirect("/login.html");
             }
@@ -281,9 +283,16 @@ public class MainServlet extends HttpServlet {
                     break;
                 }
 
-                SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
                 String own_uid = reqBody.getString("own_uid");
                 String friend_uid = reqBody.getString("friend_uid");
+                if (!own_uid.equals(session.getAttribute("uid"))) {
+                    respJson.put("code", "4");
+                    respJson.put("msg", "没有权限，请使用自己的账号");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+
+                SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
 
                 Friends[] friends = new Friends[]{new Friends(), new Friends()};
                 friends[0].setOwnUid(own_uid);
@@ -332,9 +341,16 @@ public class MainServlet extends HttpServlet {
                     break;
                 }
 
-                SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
                 String own_uid = reqBody.getString("own_uid");
                 String friend_uid = reqBody.getString("friend_uid");
+                if (!own_uid.equals(session.getAttribute("uid"))) {
+                    respJson.put("code", "4");
+                    respJson.put("msg", "没有权限，请使用自己的账号");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+
+                SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
                 Condition con = new ConditionImpl();
                 con.op("own_uid", Op.equal, own_uid).and().op("friend_uid", Op.equal, friend_uid).or()
                         .op("own_uid", Op.equal, friend_uid).and().op("friend_uid", Op.equal, own_uid);
@@ -377,10 +393,98 @@ public class MainServlet extends HttpServlet {
                     break;
                 }
 
-                SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
                 String uid = reqBody.getString("uid");
+                if (!uid.equals(session.getAttribute("uid"))) {
+                    respJson.put("code", "3");
+                    respJson.put("msg", "没有权限，请使用自己的账号");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
 
+                SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
+                List<User> users = suidRich.select(new User(uid));
+                if (users.isEmpty()) {
+                    respJson.put("code", "1");
+                    respJson.put("msg", "查询失败，不存在该uid");
+                } else {
+                    User user = users.get(0);
+                    JSONObject userInfo = new JSONObject();
+                    userInfo.put("uid", user.getUid());
+                    userInfo.put("nick", user.getNickname());
+                    userInfo.put("age", user.getAge());
+                    userInfo.put("gender", user.getGender());
+                    userInfo.put("intro", user.getIntroduction());
 
+                    respJson.put("code", "0");
+                    respJson.put("msg", userInfo);
+                }
+                respBody.add(respJson.toJSONString());
+                break;
+            }
+            /*
+                获取历史记录
+
+                应包含参数：own_uid, friend_uid
+                返回代码：0 成功；1 失败；2 own_uid参数不存在；3 friend_uid参数不存在;4 没有权限；
+             */
+            case "/getHistory": {
+                resp.setStatus(HttpServletResponse.SC_OK);
+                resp.addHeader("Content-type", "application/json");
+
+                JSONObject respJson = new JSONObject();
+                if (!reqBody.contains("own_uid")) {
+                    respJson.put("code", "2");
+                    respJson.put("msg", "own_uid参数不存在");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+                if (!reqBody.contains("friend_uid")) {
+                    respJson.put("code", "3");
+                    respJson.put("msg", "friend_uid参数不存在");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+                if (!isLoggedIn(session)) {
+                    respJson.put("code", "4");
+                    respJson.put("msg", "没有权限，请登录");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+
+                String own_uid = reqBody.getString("own_uid");
+                String friend_uid = reqBody.getString("friend_uid");
+                if (!own_uid.equals(session.getAttribute("uid"))) {
+                    respJson.put("code", "4");
+                    respJson.put("msg", "没有权限，请使用自己的账号");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+
+                SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
+                FriendMessageView qFMView = new FriendMessageView();
+                qFMView.setOwnUid(own_uid);
+                qFMView.setFriendUid(friend_uid);
+                List<FriendMessageView> fMViews = suidRich.select(qFMView);
+                if (fMViews.isEmpty()) {
+                    respJson.put("code", "1");
+                    respJson.put("msg", "没有历史记录");
+                } else {
+                    JSONArray fMVArray = new JSONArray();
+                    for (FriendMessageView fMView : fMViews) {
+                        JSONObject o = new JSONObject();
+                        o.put("id", fMView.getId());
+                        o.put("own_uid", fMView.getOwnUid());
+                        o.put("friend_uid", fMView.getFriendUid());
+                        o.put("message", fMView.getMessage());
+                        o.put("state", fMView.getState());
+                        o.put("time", fMView.getTime().getTime());
+                        o.put("sender_uid", fMView.getSenderUid());
+                        fMVArray.add(o);
+                    }
+                    respJson.put("code", "0");
+                    respJson.put("msg", fMVArray);
+                }
+                respBody.add(respJson.toJSONString());
                 break;
             }
             default: {

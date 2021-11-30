@@ -11,12 +11,21 @@ public class FriendMessageView implements Serializable, Comparable<FriendMessage
 
     private static final long serialVersionUID = 1599933065743L;
 
+    private Long id;
     private String ownUid;
     private String friendUid;
     private String message;
     private String state;
     private Timestamp time;
     private String senderUid;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public String getOwnUid() {
         return ownUid;
@@ -84,7 +93,8 @@ public class FriendMessageView implements Serializable, Comparable<FriendMessage
     @Override
     public String toString() {
         return "FriendMessageView{" +
-                "ownUid='" + ownUid + '\'' +
+                "id=" + id +
+                ", ownUid='" + ownUid + '\'' +
                 ", friendUid='" + friendUid + '\'' +
                 ", message='" + message + '\'' +
                 ", state='" + state + '\'' +
@@ -95,7 +105,9 @@ public class FriendMessageView implements Serializable, Comparable<FriendMessage
 
     @Override
     public int compareTo(FriendMessageView o) {
-        if (this.time != null) {
+        if (this.id != null) {
+            return this.id.compareTo(o.id);
+        } else if (this.time != null) {
             return this.time.compareTo(o.time);
         } else {
             return 0;

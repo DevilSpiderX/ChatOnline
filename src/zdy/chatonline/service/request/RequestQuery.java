@@ -55,5 +55,10 @@ public class RequestQuery {
     public boolean contains(String key) {
         return attributes.containsKey(key);
     }
+
+    @Override
+    public String toString() {
+        return attributes.toString();
+    }
 }
 

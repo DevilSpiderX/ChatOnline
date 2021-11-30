@@ -9,6 +9,7 @@ import org.teasoft.honey.osql.core.ConditionImpl;
 import zdy.chatonline.Constant;
 import zdy.chatonline.log.Log;
 import zdy.chatonline.service.request.RequestBody;
+import zdy.chatonline.service.request.RequestQuery;
 import zdy.chatonline.service.response.ResponseBody;
 import zdy.chatonline.sql.Friends;
 import zdy.chatonline.sql.User;
@@ -32,20 +33,23 @@ public class MainServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        RequestQuery reqQuery = new RequestQuery(req.getQueryString());
         ResponseBody respBody = new ResponseBody(resp);
         String path = req.getRequestURI();
         HttpSession session = req.getSession();
 
         System.out.println(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss"
                 , Locale.CHINA)) + "\r\nMainServlet信息: " + (counter++) + ".（" + req.getRemoteAddr() + ":"
-                + req.getRemotePort() + "） GET " + path + " " + req.getProtocol() + " " + req.getQueryString());
+                + req.getRemotePort() + "） GET " + path + " " + req.getProtocol() + " " + reqQuery);
 
         if (path.equals("/")) {
             if (isLoggedIn(session)) {
-                resp.sendRedirect("/index.html");
+                resp.sendRedirect("/index.html?uid=" + session.getAttribute("uid"));
             } else {
                 resp.sendRedirect("/login.html");
             }
+        } else if (path.equals("/index.html") && !reqQuery.contains("uid")) {
+            resp.sendRedirect("/login.html");
         } else {
             Path filepath = Paths.get(Constant.configs.getString("WEB_DIRECTORY_PREFIX"), path);
             InputStream fileInputStream;
@@ -347,6 +351,36 @@ public class MainServlet extends HttpServlet {
                     respJson.put("msg", "删除失败");
                 }
                 respBody.add(respJson.toJSONString());
+                break;
+            }
+            /*
+                获取用户信息
+
+                应包含参数：uid
+                返回代码：0 成功；1 失败；2 uid参数不存在；3 没有权限；
+             */
+            case "/getInformation": {
+                resp.setStatus(HttpServletResponse.SC_OK);
+                resp.addHeader("Content-type", "application/json");
+
+                JSONObject respJson = new JSONObject();
+                if (!reqBody.contains("uid")) {
+                    respJson.put("code", "2");
+                    respJson.put("msg", "uid参数不存在");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+                if (!isLoggedIn(session)) {
+                    respJson.put("code", "3");
+                    respJson.put("msg", "没有权限，请登录");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+
+                SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
+                String uid = reqBody.getString("uid");
+
+
                 break;
             }
             default: {

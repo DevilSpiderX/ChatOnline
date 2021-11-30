@@ -394,12 +394,6 @@ public class MainServlet extends HttpServlet {
                 }
 
                 String uid = reqBody.getString("uid");
-                if (!uid.equals(session.getAttribute("uid"))) {
-                    respJson.put("code", "3");
-                    respJson.put("msg", "没有权限，请使用自己的账号");
-                    respBody.add(respJson.toJSONString());
-                    break;
-                }
 
                 SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
                 List<User> users = suidRich.select(new User(uid));

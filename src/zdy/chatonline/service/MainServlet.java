@@ -180,11 +180,11 @@ public class MainServlet extends HttpServlet {
 
                 JSONObject respJson = new JSONObject();
                 if (isLoggedIn(session)) {
-                    session.setAttribute("loggedIn", false);
-                    session.invalidate();
-
                     respJson.put("code", "0");
                     respJson.put("msg", session.getAttribute("uid") + "登出成功");
+
+                    session.setAttribute("loggedIn", false);
+                    session.invalidate();
                 } else {
                     respJson.put("code", "1");
                     respJson.put("msg", "该用户未登录");

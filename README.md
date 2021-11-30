@@ -1,5 +1,5 @@
-<h1 style="text-align : center;">数据库课设</h1>
-<p style="text-align : center;">在线聊天系统</p>
+<h1 style="text-align : center;" align="center">数据库课设</h1>
+<p style="text-align : center;" align="center">在线聊天系统</p>
 
 # 配置文件
 

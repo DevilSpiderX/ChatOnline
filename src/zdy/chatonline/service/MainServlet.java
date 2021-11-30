@@ -31,6 +31,7 @@ import java.util.*;
 public class MainServlet extends HttpServlet {
     private final static Log log = new Log();
     private int counter = 0;
+    private static final Map<String, HttpSession> UID_SESSION = new HashMap<>();
     private static final Map<String, HttpSession> UID_SESSION_TO_WS = new HashMap<>();
 
     @Override
@@ -146,8 +147,11 @@ public class MainServlet extends HttpServlet {
                     if (pwd.equals(user.getPassword())) {
                         HttpSession oldSession;
                         if ((oldSession = getUidSession(uid)) != null) {
-                            oldSession.setAttribute("loggedIn", false);
-                            oldSession.setMaxInactiveInterval(5);
+                            try {
+                                oldSession.setAttribute("loggedIn", false);
+                                oldSession.setMaxInactiveInterval(5);
+                            } catch (IllegalStateException ignored) {
+                            }
                         }
                         int maxAge = 10 * 60 * 60;//10小时
                         session.setMaxInactiveInterval(maxAge);
@@ -158,7 +162,9 @@ public class MainServlet extends HttpServlet {
                         cookieSId.setMaxAge(maxAge);
                         cookieSId.setPath("/");
                         resp.addCookie(cookieSId);
-                        UID_SESSION_TO_WS.put(uid, session);
+
+                        addUidSession(uid, session);
+
                         respJson.put("code", "0");
                         respJson.put("msg", user.getNickname() + "（" + user.getUid() + "）登录成功");
                     } else {
@@ -527,12 +533,21 @@ public class MainServlet extends HttpServlet {
         return session.getAttribute("loggedIn") != null && (Boolean) session.getAttribute("loggedIn");
     }
 
-    public static HttpSession getUidSession(String uid) {
+    private static void addUidSession(String uid, HttpSession session) {
+        UID_SESSION.put(uid, session);
+        UID_SESSION_TO_WS.put(uid, session);
+    }
+
+    private static HttpSession getUidSession(String uid) {
+        return UID_SESSION.get(uid);
+    }
+
+    public static HttpSession getUidSessionToWS(String uid) {
+        HttpSession session = null;
         if (UID_SESSION_TO_WS.containsKey(uid)) {
-            HttpSession session = UID_SESSION_TO_WS.get(uid);
+            session = UID_SESSION_TO_WS.get(uid);
             UID_SESSION_TO_WS.remove(uid);
-            return session;
         }
-        return null;
+        return session;
     }
 }

@@ -57,7 +57,7 @@ public class COWebSocket {
         }
         this.session = session;
         this.uid = uid;
-        httpSession = MainServlet.getUidSession(uid);
+        httpSession = MainServlet.getUidSessionToWS(uid);
         webSocketMap.put(uid, this);
         addOnlineCount();
         sendThread = new SendMessageThread(session.getId());

@@ -496,6 +496,57 @@ public class MainServlet extends HttpServlet {
                 respBody.add(respJson.toJSONString());
                 break;
             }
+            /*
+                获取所有好友uid
+
+                应包含参数：uid
+                返回代码：0 成功；1 失败；2 own_uid参数不存在；3 没有权限；
+             */
+            case "/getFriends": {
+                resp.setStatus(HttpServletResponse.SC_OK);
+                resp.addHeader("Content-type", "application/json");
+
+                JSONObject respJson = new JSONObject();
+                if (!reqBody.contains("uid")) {
+                    respJson.put("code", "2");
+                    respJson.put("msg", "uid参数不存在");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+                if (!isLoggedIn(session)) {
+                    respJson.put("code", "3");
+                    respJson.put("msg", "没有权限，请登录");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+                String uid = reqBody.getString("uid");
+                if (!uid.equals(session.getAttribute("uid"))) {
+                    respJson.put("code", "3");
+                    respJson.put("msg", "没有权限，请使用自己的账号");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+
+                SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
+                List<Friends> friends = suidRich.select(new Friends(uid));
+                if (friends.isEmpty()) {
+                    respJson.put("code", "1");
+                    respJson.put("msg", "没有好友");
+                } else {
+                    JSONArray friendArray = new JSONArray();
+                    for (Friends friend : friends) {
+                        JSONObject o = new JSONObject();
+                        o.put("id", friend.getId());
+                        o.put("own_uid", friend.getOwnUid());
+                        o.put("friend_uid", friend.getFriendUid());
+                        friendArray.add(o);
+                    }
+                    respJson.put("code", "0");
+                    respJson.put("msg", friendArray);
+                }
+                respBody.add(respJson.toJSONString());
+                break;
+            }
             default: {
                 resp.sendError(HttpServletResponse.SC_NOT_FOUND);
                 appendLog(req, reqBody.toString());

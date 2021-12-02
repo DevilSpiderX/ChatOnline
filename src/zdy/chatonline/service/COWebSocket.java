@@ -8,6 +8,7 @@ import org.teasoft.bee.osql.SuidRich;
 import org.teasoft.honey.osql.core.BeeFactory;
 import org.teasoft.honey.osql.core.ConditionImpl;
 import zdy.chatonline.log.Log;
+import zdy.chatonline.sql.Friends;
 import zdy.chatonline.sql.MessageRecord;
 
 import javax.servlet.http.HttpSession;
@@ -150,6 +151,7 @@ public class COWebSocket {
 
                 应包含参数：cmd, receiver_uid, msg
                 返回代码：0 成功；1 失败；2 receiver_uid参数不存在;3 msg参数不存在；4 sender_uid和receiver_uid相等；
+                        5 不是好友
 
                 接收者接收的信息中的cmd为acceptMessage
                 应包含参数:code, msg, time, sender_uid
@@ -182,6 +184,13 @@ public class COWebSocket {
                     }
 
                     SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
+                    if (!suidRich.exist(new Friends(uid, receiver_uid))) {
+                        respJson.put("cmd", cmd);
+                        respJson.put("code", "5");
+                        respJson.put("msg", "你和" + receiver_uid + "不是好友");
+                        sendMessage(respJson.toJSONString());
+                        break;
+                    }
 
                     MessageRecord msgRcd = new MessageRecord();
                     msgRcd.setMessage(message);

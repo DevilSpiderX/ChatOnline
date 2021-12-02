@@ -14,6 +14,18 @@ public class Friends implements Serializable {
     private String ownUid;
     private String friendUid;
 
+    public Friends() {
+    }
+
+    public Friends(String ownUid) {
+        this.ownUid = ownUid;
+    }
+
+    public Friends(String ownUid, String friendUid) {
+        this.ownUid = ownUid;
+        this.friendUid = friendUid;
+    }
+
     public Long getId() {
         return id;
     }

@@ -54,8 +54,6 @@ public class COWebSocket {
             offlineJson.put("code", "0");
             offlineJson.put("msg", "您的账号在别的客户端登录，您将被强制下线");
             oldWebSocket.sendMessage(offlineJson.toJSONString());
-
-            oldWebSocket.close();
         }
         this.session = session;
         this.uid = uid;

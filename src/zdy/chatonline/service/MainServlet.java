@@ -272,7 +272,7 @@ public class MainServlet extends HttpServlet {
                 添加好友
 
                 应包含参数：own_uid, friend_uid
-                返回代码：0 成功；1 失败；2 own_uid参数不存在；3 friend_uid参数不存在;4 没有权限；5 不能添加自己为好友；
+                返回代码：0 成功；1 失败；2 own_uid参数不存在；3 friend_uid参数不存在;4 没有权限；5 不能添加自己为好友；6 好友已存在；
              */
             case "/addFriend": {
                 resp.setStatus(HttpServletResponse.SC_OK);
@@ -314,6 +314,12 @@ public class MainServlet extends HttpServlet {
                 }
 
                 SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
+                if (suidRich.exist(new Friends(own_uid, friend_uid))) {
+                    respJson.put("code", "6");
+                    respJson.put("msg", "好友已存在");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
 
                 Friends[] friends = new Friends[]{new Friends(), new Friends()};
                 friends[0].setOwnUid(own_uid);

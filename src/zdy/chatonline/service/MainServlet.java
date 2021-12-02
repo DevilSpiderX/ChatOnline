@@ -272,7 +272,7 @@ public class MainServlet extends HttpServlet {
                 添加好友
 
                 应包含参数：own_uid, friend_uid
-                返回代码：0 成功；1 失败；2 own_uid参数不存在；3 friend_uid参数不存在;4 没有权限；
+                返回代码：0 成功；1 失败；2 own_uid参数不存在；3 friend_uid参数不存在;4 没有权限；5 不能添加自己为好友；
              */
             case "/addFriend": {
                 resp.setStatus(HttpServletResponse.SC_OK);
@@ -303,6 +303,12 @@ public class MainServlet extends HttpServlet {
                 if (!own_uid.equals(session.getAttribute("uid"))) {
                     respJson.put("code", "4");
                     respJson.put("msg", "没有权限，请使用自己的账号");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+                if (own_uid.equals(friend_uid)) {
+                    respJson.put("code", "5");
+                    respJson.put("msg", "不能添加自己为好友");
                     respBody.add(respJson.toJSONString());
                     break;
                 }

@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@ServerEndpoint(value = "/websocket/{uid}")
+@ServerEndpoint(value = "/websocket/{uid}/{token}")
 public class COWebSocket {
     private static final AtomicInteger onlineCount = new AtomicInteger(0);
     protected static ConcurrentHashMap<String, COWebSocket> webSocketMap = new ConcurrentHashMap<>();
@@ -38,7 +38,8 @@ public class COWebSocket {
     private SendMessageThread sendThread;
 
     @OnOpen
-    public void onOpen(@PathParam("uid") String uid, Session session) throws IOException {
+    public void onOpen(@PathParam("uid") String uid, @PathParam("token") String token, Session session)
+            throws IOException {
         COWebSocket oldWebSocket;
         if ((oldWebSocket = webSocketMap.get(uid)) != null) {
             /*
@@ -57,7 +58,7 @@ public class COWebSocket {
         }
         this.session = session;
         this.uid = uid;
-        httpSession = MainServlet.getUidSessionToWS(uid);
+        httpSession = MainServlet.getUidSessionToWS(uid, token);
         webSocketMap.put(uid, this);
         addOnlineCount();
         sendThread = new SendMessageThread(session.getId());
@@ -142,11 +143,12 @@ public class COWebSocket {
         JSONObject data = JSON.parseObject(msg);
         String cmd = data.getString("cmd");
         if (isLoggedIn()) {
+            //noinspection SwitchStatementWithTooFewBranches
             switch (cmd) {
             /*
                 发送信息
 
-                应包含参数：receiver_uid, msg
+                应包含参数：cmd, receiver_uid, msg
                 返回代码：0 成功；1 失败；2 receiver_uid参数不存在;3 msg参数不存在；4 sender_uid和receiver_uid相等；
 
                 接收者接收的信息中的cmd为acceptMessage

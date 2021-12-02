@@ -20,9 +20,13 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -32,7 +36,7 @@ public class MainServlet extends HttpServlet {
     private final static Log log = new Log();
     private int counter = 0;
     private static final Map<String, HttpSession> UID_SESSION = new HashMap<>();
-    private static final Map<String, HttpSession> UID_SESSION_TO_WS = new HashMap<>();
+    private static final Map<String, String> tokens = new HashMap<>();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -47,7 +51,8 @@ public class MainServlet extends HttpServlet {
 
         if (path.equals("/")) {
             if (isLoggedIn(session)) {
-                resp.sendRedirect("/panel.html?uid=" + session.getAttribute("uid"));
+                String uid = (String) session.getAttribute("uid");
+                resp.sendRedirect("/panel.html?uid=" + uid + "&token=" + tokens.get(uid));
             } else {
                 resp.sendRedirect("/login.html");
             }
@@ -146,7 +151,7 @@ public class MainServlet extends HttpServlet {
                     User user = users.get(0);
                     if (pwd.equals(user.getPassword())) {
                         HttpSession oldSession;
-                        if ((oldSession = getUidSession(uid)) != null) {
+                        if ((oldSession = UID_SESSION.get(uid)) != null) {
                             try {
                                 oldSession.setAttribute("loggedIn", false);
                                 oldSession.setMaxInactiveInterval(5);
@@ -163,10 +168,12 @@ public class MainServlet extends HttpServlet {
                         cookieSId.setPath("/");
                         resp.addCookie(cookieSId);
 
-                        addUidSession(uid, session);
+                        tokens.put(uid, token(uid));
+                        UID_SESSION.put(uid, session);
 
                         respJson.put("code", "0");
                         respJson.put("msg", user.getNickname() + "（" + user.getUid() + "）登录成功");
+                        respJson.put("token", tokens.get(uid));
                     } else {
                         respJson.put("code", "1");
                         respJson.put("msg", "密码错误");
@@ -178,6 +185,7 @@ public class MainServlet extends HttpServlet {
             /*
                 登出
 
+                应包含参数：uid
                 返回代码：0 成功；1 还未登录；
              */
             case "/logout": {
@@ -189,6 +197,7 @@ public class MainServlet extends HttpServlet {
                     respJson.put("code", "0");
                     respJson.put("msg", session.getAttribute("uid") + "登出成功");
 
+                    tokens.remove(reqBody.getString("uid"));
                     session.setAttribute("loggedIn", false);
                     session.invalidate();
                 } else {
@@ -533,21 +542,23 @@ public class MainServlet extends HttpServlet {
         return session.getAttribute("loggedIn") != null && (Boolean) session.getAttribute("loggedIn");
     }
 
-    private static void addUidSession(String uid, HttpSession session) {
-        UID_SESSION.put(uid, session);
-        UID_SESSION_TO_WS.put(uid, session);
-    }
-
-    private static HttpSession getUidSession(String uid) {
-        return UID_SESSION.get(uid);
-    }
-
-    public static HttpSession getUidSessionToWS(String uid) {
+    public static HttpSession getUidSessionToWS(String uid, String token) {
         HttpSession session = null;
-        if (UID_SESSION_TO_WS.containsKey(uid)) {
-            session = UID_SESSION_TO_WS.get(uid);
-            UID_SESSION_TO_WS.remove(uid);
+        if (token.equals(tokens.get(uid))) {
+            session = UID_SESSION.get(uid);
         }
         return session;
+    }
+
+    public static String token(String uid) {
+        byte[] digest;
+        try {
+            MessageDigest md5 = MessageDigest.getInstance("md5");
+            digest = md5.digest(uid.getBytes(StandardCharsets.UTF_8));
+            return new BigInteger(1, digest).toString(16);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

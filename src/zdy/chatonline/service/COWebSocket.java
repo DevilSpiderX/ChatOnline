@@ -142,7 +142,6 @@ public class COWebSocket {
         JSONObject data = JSON.parseObject(msg);
         String cmd = data.getString("cmd");
         if (isLoggedIn()) {
-            //noinspection SwitchStatementWithTooFewBranches
             switch (cmd) {
             /*
                 发送信息
@@ -214,6 +213,10 @@ public class COWebSocket {
                     respJson.put("code", "0");
                     respJson.put("msg", "成功");
                     sendMessage(respJson.toJSONString());
+                    break;
+                }
+                case "ping": {
+                    print(address, "Ping/30分钟，防止断开");
                     break;
                 }
                 default: {

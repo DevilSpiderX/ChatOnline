@@ -549,8 +549,13 @@ public class MainServlet extends HttpServlet {
                     for (Friends friend : friends) {
                         JSONObject o = new JSONObject();
                         o.put("id", friend.getId());
-                        o.put("own_uid", friend.getOwnUid());
                         o.put("friend_uid", friend.getFriendUid());
+                        User friendUser = suidRich.select(new User(friend.getFriendUid()),
+                                "nickname,age,gender,introduction").get(0);
+                        o.put("nick", friendUser.getNickname());
+                        o.put("age", friendUser.getAge());
+                        o.put("gender", friendUser.getGender());
+                        o.put("intro", friendUser.getIntroduction());
                         friendArray.add(o);
                     }
                     respJson.put("code", "0");

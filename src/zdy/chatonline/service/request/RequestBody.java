@@ -154,7 +154,7 @@ public class RequestBody {
      * @param bodyBytes   请求体的内容，二进制形式
      */
     public void parse(String contentType, Bytes bodyBytes) {
-        parse(contentType, bodyBytes.getString());
+        parse(contentType, bodyBytes.getString(StandardCharsets.UTF_8));
     }
 
     /**

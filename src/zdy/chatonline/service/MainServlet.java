@@ -186,16 +186,30 @@ public class MainServlet extends HttpServlet {
                 登出
 
                 应包含参数：uid
-                返回代码：0 成功；1 还未登录；
+                返回代码：0 成功；1 还未登录；2 uid参数不存在；1002 不是自己的账号；
              */
             case "/logout": {
                 resp.setStatus(HttpServletResponse.SC_OK);
                 resp.addHeader("Content-type", "application/json");
 
                 JSONObject respJson = new JSONObject();
+                if (!reqBody.contains("uid")) {
+                    respJson.put("code", "2");
+                    respJson.put("msg", "uid参数不存在");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+                String uid = reqBody.getString("uid");
+                if (!uid.equals(session.getAttribute("uid"))) {
+                    respJson.put("code", "1002");
+                    respJson.put("msg", "没有权限，不是自己的账号");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+
                 if (isLoggedIn(session)) {
                     respJson.put("code", "0");
-                    respJson.put("msg", session.getAttribute("uid") + "登出成功");
+                    respJson.put("msg", uid + "登出成功");
 
                     tokens.remove(reqBody.getString("uid"));
                     session.setAttribute("loggedIn", false);
@@ -272,7 +286,8 @@ public class MainServlet extends HttpServlet {
                 添加好友
 
                 应包含参数：own_uid, friend_uid
-                返回代码：0 成功；1 失败；2 own_uid参数不存在；3 friend_uid参数不存在;4 没有权限；5 不能添加自己为好友；6 好友已存在；
+                返回代码：0 成功；1 失败；2 own_uid参数不存在；3 friend_uid参数不存在;4 不能添加自己为好友；5 好友已存在；
+                        1001 没有权限；1002 不是自己的账号；
              */
             case "/addFriend": {
                 resp.setStatus(HttpServletResponse.SC_OK);
@@ -292,7 +307,7 @@ public class MainServlet extends HttpServlet {
                     break;
                 }
                 if (!isLoggedIn(session)) {
-                    respJson.put("code", "4");
+                    respJson.put("code", "1001");
                     respJson.put("msg", "没有权限，请登录");
                     respBody.add(respJson.toJSONString());
                     break;
@@ -301,13 +316,13 @@ public class MainServlet extends HttpServlet {
                 String own_uid = reqBody.getString("own_uid");
                 String friend_uid = reqBody.getString("friend_uid");
                 if (!own_uid.equals(session.getAttribute("uid"))) {
-                    respJson.put("code", "4");
+                    respJson.put("code", "1002");
                     respJson.put("msg", "没有权限，请使用自己的账号");
                     respBody.add(respJson.toJSONString());
                     break;
                 }
                 if (own_uid.equals(friend_uid)) {
-                    respJson.put("code", "5");
+                    respJson.put("code", "4");
                     respJson.put("msg", "不能添加自己为好友");
                     respBody.add(respJson.toJSONString());
                     break;
@@ -315,7 +330,7 @@ public class MainServlet extends HttpServlet {
 
                 SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
                 if (suidRich.exist(new Friends(own_uid, friend_uid))) {
-                    respJson.put("code", "6");
+                    respJson.put("code", "5");
                     respJson.put("msg", "好友已存在");
                     respBody.add(respJson.toJSONString());
                     break;
@@ -342,7 +357,7 @@ public class MainServlet extends HttpServlet {
                 删除好友
 
                 应包含参数：own_uid, friend_uid
-                返回代码：0 成功；1 失败；2 own_uid参数不存在；3 friend_uid参数不存在;4 没有权限；
+                返回代码：0 成功；1 失败；2 own_uid参数不存在；3 friend_uid参数不存在；1001 没有权限；1002 不是自己的账号；
              */
             case "/deleteFriend": {
                 resp.setStatus(HttpServletResponse.SC_OK);
@@ -362,7 +377,7 @@ public class MainServlet extends HttpServlet {
                     break;
                 }
                 if (!isLoggedIn(session)) {
-                    respJson.put("code", "4");
+                    respJson.put("code", "1001");
                     respJson.put("msg", "没有权限，请登录");
                     respBody.add(respJson.toJSONString());
                     break;
@@ -371,7 +386,7 @@ public class MainServlet extends HttpServlet {
                 String own_uid = reqBody.getString("own_uid");
                 String friend_uid = reqBody.getString("friend_uid");
                 if (!own_uid.equals(session.getAttribute("uid"))) {
-                    respJson.put("code", "4");
+                    respJson.put("code", "1002");
                     respJson.put("msg", "没有权限，请使用自己的账号");
                     respBody.add(respJson.toJSONString());
                     break;
@@ -400,7 +415,7 @@ public class MainServlet extends HttpServlet {
                 获取用户信息
 
                 应包含参数：uid
-                返回代码：0 成功；1 失败；2 uid参数不存在；3 没有权限；
+                返回代码：0 成功；1 失败；2 uid参数不存在；1001 没有权限；
              */
             case "/getInformation": {
                 resp.setStatus(HttpServletResponse.SC_OK);
@@ -414,7 +429,7 @@ public class MainServlet extends HttpServlet {
                     break;
                 }
                 if (!isLoggedIn(session)) {
-                    respJson.put("code", "3");
+                    respJson.put("code", "1001");
                     respJson.put("msg", "没有权限，请登录");
                     respBody.add(respJson.toJSONString());
                     break;
@@ -437,7 +452,8 @@ public class MainServlet extends HttpServlet {
                     userInfo.put("intro", user.getIntroduction());
 
                     respJson.put("code", "0");
-                    respJson.put("msg", userInfo);
+                    respJson.put("msg", "查询成功");
+                    respJson.put("data", userInfo);
                 }
                 respBody.add(respJson.toJSONString());
                 break;
@@ -446,7 +462,7 @@ public class MainServlet extends HttpServlet {
                 获取历史记录
 
                 应包含参数：own_uid, friend_uid
-                返回代码：0 成功；1 失败；2 own_uid参数不存在；3 friend_uid参数不存在;4 没有权限；
+                返回代码：0 成功；1 失败；2 own_uid参数不存在；3 friend_uid参数不存在;1001 没有权限；1002 不是自己的账号；
              */
             case "/getHistory": {
                 resp.setStatus(HttpServletResponse.SC_OK);
@@ -466,7 +482,7 @@ public class MainServlet extends HttpServlet {
                     break;
                 }
                 if (!isLoggedIn(session)) {
-                    respJson.put("code", "4");
+                    respJson.put("code", "1001");
                     respJson.put("msg", "没有权限，请登录");
                     respBody.add(respJson.toJSONString());
                     break;
@@ -475,7 +491,7 @@ public class MainServlet extends HttpServlet {
                 String own_uid = reqBody.getString("own_uid");
                 String friend_uid = reqBody.getString("friend_uid");
                 if (!own_uid.equals(session.getAttribute("uid"))) {
-                    respJson.put("code", "4");
+                    respJson.put("code", "1002");
                     respJson.put("msg", "没有权限，请使用自己的账号");
                     respBody.add(respJson.toJSONString());
                     break;
@@ -495,8 +511,6 @@ public class MainServlet extends HttpServlet {
                     for (FriendMessageView fMView : fMViews) {
                         JSONObject o = new JSONObject();
                         o.put("id", fMView.getId());
-                        o.put("own_uid", fMView.getOwnUid());
-                        o.put("friend_uid", fMView.getFriendUid());
                         o.put("message", fMView.getMessage());
                         o.put("state", fMView.getState());
                         o.put("time", fMView.getTime().getTime());
@@ -504,44 +518,45 @@ public class MainServlet extends HttpServlet {
                         fMVArray.add(o);
                     }
                     respJson.put("code", "0");
-                    respJson.put("msg", fMVArray);
+                    respJson.put("msg", "获取成功");
+                    respJson.put("data", fMVArray);
                 }
                 respBody.add(respJson.toJSONString());
                 break;
             }
             /*
-                获取所有好友uid
+                获取所有好友uid及其信息
 
-                应包含参数：uid
-                返回代码：0 成功；1 失败；2 own_uid参数不存在；3 没有权限；
+                应包含参数：own_uid
+                返回代码：0 成功；1 失败；2 own_uid参数不存在；1001 没有权限；1002 不是自己的账号；
              */
             case "/getFriends": {
                 resp.setStatus(HttpServletResponse.SC_OK);
                 resp.addHeader("Content-type", "application/json");
 
                 JSONObject respJson = new JSONObject();
-                if (!reqBody.contains("uid")) {
+                if (!reqBody.contains("own_uid")) {
                     respJson.put("code", "2");
-                    respJson.put("msg", "uid参数不存在");
+                    respJson.put("msg", "own_uid参数不存在");
                     respBody.add(respJson.toJSONString());
                     break;
                 }
                 if (!isLoggedIn(session)) {
-                    respJson.put("code", "3");
+                    respJson.put("code", "1001");
                     respJson.put("msg", "没有权限，请登录");
                     respBody.add(respJson.toJSONString());
                     break;
                 }
-                String uid = reqBody.getString("uid");
-                if (!uid.equals(session.getAttribute("uid"))) {
-                    respJson.put("code", "3");
+                String own_uid = reqBody.getString("own_uid");
+                if (!own_uid.equals(session.getAttribute("uid"))) {
+                    respJson.put("code", "1002");
                     respJson.put("msg", "没有权限，请使用自己的账号");
                     respBody.add(respJson.toJSONString());
                     break;
                 }
 
                 SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
-                List<Friends> friends = suidRich.select(new Friends(uid));
+                List<Friends> friends = suidRich.select(new Friends(own_uid));
                 if (friends.isEmpty()) {
                     respJson.put("code", "1");
                     respJson.put("msg", "没有好友");
@@ -560,7 +575,8 @@ public class MainServlet extends HttpServlet {
                         friendArray.add(o);
                     }
                     respJson.put("code", "0");
-                    respJson.put("msg", friendArray);
+                    respJson.put("msg", "获取成功");
+                    respJson.put("data", friendArray);
                 }
                 respBody.add(respJson.toJSONString());
                 break;
@@ -568,35 +584,35 @@ public class MainServlet extends HttpServlet {
             /*
                 更新用户信息
 
-                应包含参数：uid [,nick, age, gender, intro]
-                返回代码：0 成功；1 失败；2 uid参数不存在；3 没有权限；
+                应包含参数：own_uid [,nick, age, gender, intro]
+                返回代码：0 成功；1 失败；2 own_uid参数不存在；1001 没有权限；1002 不是自己的账号；
              */
             case "/updateInformation": {
                 resp.setStatus(HttpServletResponse.SC_OK);
                 resp.addHeader("Content-type", "application/json");
 
                 JSONObject respJson = new JSONObject();
-                if (!reqBody.contains("uid")) {
+                if (!reqBody.contains("own_uid")) {
                     respJson.put("code", "2");
-                    respJson.put("msg", "uid参数不存在");
+                    respJson.put("msg", "own_uid参数不存在");
                     respBody.add(respJson.toJSONString());
                     break;
                 }
                 if (!isLoggedIn(session)) {
-                    respJson.put("code", "3");
+                    respJson.put("code", "1001");
                     respJson.put("msg", "没有权限，请登录");
                     respBody.add(respJson.toJSONString());
                     break;
                 }
-                String uid = reqBody.getString("uid");
-                if (!uid.equals(session.getAttribute("uid"))) {
-                    respJson.put("code", "3");
+                String own_uid = reqBody.getString("own_uid");
+                if (!own_uid.equals(session.getAttribute("uid"))) {
+                    respJson.put("code", "1002");
                     respJson.put("msg", "没有权限，请使用自己的账号");
                     respBody.add(respJson.toJSONString());
                     break;
                 }
 
-                User uUser = new User(uid);
+                User uUser = new User(own_uid);
                 StringBuilder updateField = new StringBuilder();
                 if (reqBody.contains("nick")) {
                     uUser.setNickname(reqBody.getString("nick"));

@@ -211,12 +211,12 @@ public class COWebSocket {
                     suidRich.insert(msgRcd);
                     respJson.put("cmd", cmd);
                     respJson.put("code", "0");
-                    respJson.put("msg", "成功");
+                    respJson.put("msg", "发送成功");
                     sendMessage(respJson.toJSONString());
                     break;
                 }
                 case "ping": {
-                    print(address, "客户端" + uid + " Ping/10分钟，防止断开");
+                    print(address, "客户端" + uid + " Ping指令，防止连接自动断开");
                     break;
                 }
                 default: {
@@ -231,7 +231,7 @@ public class COWebSocket {
         } else {
             JSONObject respJson = new JSONObject();
             respJson.put("cmd", cmd);
-            respJson.put("code", "500");
+            respJson.put("code", "1001");
             respJson.put("msg", "没有权限，请登录");
             sendMessage(respJson.toJSONString());
         }

@@ -216,7 +216,7 @@ public class COWebSocket {
                     break;
                 }
                 case "ping": {
-                    print(address, "Ping/30分钟，防止断开");
+                    print(address, "客户端" + uid + " Ping/10分钟，防止断开");
                     break;
                 }
                 default: {

@@ -9,3 +9,6 @@
 - Error_Page 错误页面
 - Error_Page.CODE 错误代码
 - Error_Page.LOCATION 错误页面文件地址
+
+# API接口文档
+- [点击这里 - 文档](https://github.com/DevilSpiderX/ChatOnline/tree/main/doc)

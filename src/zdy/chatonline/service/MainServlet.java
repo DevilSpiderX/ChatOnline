@@ -490,6 +490,7 @@ public class MainServlet extends HttpServlet {
                     respJson.put("code", "1");
                     respJson.put("msg", "没有历史记录");
                 } else {
+                    fMViews.sort(Comparator.naturalOrder());
                     JSONArray fMVArray = new JSONArray();
                     for (FriendMessageView fMView : fMViews) {
                         JSONObject o = new JSONObject();
@@ -560,6 +561,77 @@ public class MainServlet extends HttpServlet {
                     }
                     respJson.put("code", "0");
                     respJson.put("msg", friendArray);
+                }
+                respBody.add(respJson.toJSONString());
+                break;
+            }
+            /*
+                更新用户信息
+
+                应包含参数：uid [,nick, age, gender, intro]
+                返回代码：0 成功；1 失败；2 uid参数不存在；3 没有权限；
+             */
+            case "/updateInformation": {
+                resp.setStatus(HttpServletResponse.SC_OK);
+                resp.addHeader("Content-type", "application/json");
+
+                JSONObject respJson = new JSONObject();
+                if (!reqBody.contains("uid")) {
+                    respJson.put("code", "2");
+                    respJson.put("msg", "uid参数不存在");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+                if (!isLoggedIn(session)) {
+                    respJson.put("code", "3");
+                    respJson.put("msg", "没有权限，请登录");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+                String uid = reqBody.getString("uid");
+                if (!uid.equals(session.getAttribute("uid"))) {
+                    respJson.put("code", "3");
+                    respJson.put("msg", "没有权限，请使用自己的账号");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+
+                User uUser = new User(uid);
+                StringBuilder updateField = new StringBuilder();
+                if (reqBody.contains("nick")) {
+                    uUser.setNickname(reqBody.getString("nick"));
+                    updateField.append("nickname,");
+                }
+                if (reqBody.contains("age")) {
+                    if (reqBody.get("age") instanceof Integer) {
+                        uUser.setAge((Integer) reqBody.get("age"));
+                    } else {
+                        uUser.setAge(Integer.parseInt(reqBody.getString("age")));
+                    }
+                    updateField.append("age,");
+                }
+                if (reqBody.contains("gender")) {
+                    uUser.setGender(reqBody.getString("gender"));
+                    updateField.append("gender,");
+                }
+                if (reqBody.contains("intro")) {
+                    uUser.setIntroduction(reqBody.getString("intro"));
+                    updateField.append("introduction,");
+                }
+                if (updateField.length() == 0) {
+                    respJson.put("code", "1");
+                    respJson.put("msg", "一个可更改的信息都没有传入");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+                SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
+                int count = suidRich.update(uUser, updateField.substring(0, updateField.length() - 1));
+                if (count == 1) {
+                    respJson.put("code", "0");
+                    respJson.put("msg", "更新成功");
+                } else {
+                    respJson.put("code", "1");
+                    respJson.put("msg", "更新失败（数据库原因）");
                 }
                 respBody.add(respJson.toJSONString());
                 break;

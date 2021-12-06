@@ -1,5 +1,5 @@
 <component name="libraryTable">
-  <library name="tomcat">
+  <library name="tomcat-9.0.54">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/../../../MyDownloads/Java/tomcat/annotations-api.jar!/" />
       <root url="jar://$PROJECT_DIR$/../../../MyDownloads/Java/tomcat/ecj-4.20.jar!/" />

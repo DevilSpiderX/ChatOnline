@@ -11,7 +11,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="mysql-connector-java-8.0.22" level="project" />
-    <orderEntry type="library" name="tomcat" level="project" />
+    <orderEntry type="library" name="tomcat-9.0.54" level="project" />
     <orderEntry type="library" name="fastjson-1.2.76" level="project" />
     <orderEntry type="library" name="bee-1.9.5" level="project" />
   </component>

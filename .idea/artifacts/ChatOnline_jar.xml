@@ -9,7 +9,7 @@
         <element id="library" level="project" name="bee-1.9.5" />
         <element id="library" level="project" name="fastjson-1.2.76" />
         <element id="library" level="project" name="mysql-connector-java-8.0.22" />
-        <element id="library" level="project" name="tomcat" />
+        <element id="library" level="project" name="tomcat-9.0.54" />
       </element>
     </root>
   </artifact>

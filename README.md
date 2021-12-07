@@ -45,13 +45,13 @@
 
 **表：**
 
-- 主键使用<u>下划线</u>标出，外键使用#标出
+- 主键使用粗体标出，外键使用#标出
 
-| 表名             |    字段1     | 字段2      | 字段3         | 字段4  | 字段5         | 字段6           |
-|:---------------|:----------:|----------|-------------|------|-------------|---------------|
-| user           | <u>uid</u> | password | nickname    | age  | gender      | introduction  |
-| friends        | <u>id</u>  | #own_uid | #friend_uid |      |             |               |
-| message_record | <u>id</u>  | message  | state       | time | #sender_uid | #receiver_uid |
+| 表名             |   字段1   | 字段2      | 字段3         | 字段4  | 字段5         | 字段6           |
+|:---------------|:-------:|----------|-------------|------|-------------|---------------|
+| user           | **uid** | password | nickname    | age  | gender      | introduction  |
+| friends        | **id**  | #own_uid | #friend_uid |      |             |               |
+| message_record | **id**  | message  | state       | time | #sender_uid | #receiver_uid |
 
 **视图：**
 
@@ -59,9 +59,10 @@
 |---------------------|-----|---------|------------|---------|-------|------|------------|
 | friend_message_view | id  | own_uid | friend_uid | message | state | time | sender_uid |
 
-```sql
+```mysql
 CREATE VIEW `friend_message_view` AS 
 SELECT 
+  `message_record`.`id` AS `id`,
   `friends`.`own_uid` AS `own_uid`,
   `friends`.`friend_uid` AS `friend_uid`,
   `message_record`.`message` AS `message`,
@@ -86,11 +87,22 @@ ON((((
 
 **存储过程：**
 
-```sql
+```mysql
 CREATE PROCEDURE `add_user`(IN `in_uid` varchar(20),IN `in_password` varchar(255),IN `in_nickname` varchar(255),
                             IN `in_age` int,IN `in_gender` char(1),IN `in_introduction` varchar(255))
 BEGIN
 	INSERT INTO `user`
 	VALUES(`in_uid`,`in_password`,`in_nickname`,`in_age`,`in_gender`,`in_introduction`);
+END
+```
+
+**触发器：**
+
+```mysql
+CREATE TRIGGER `deleteFriend` AFTER DELETE ON `friends` FOR EACH ROW 
+BEGIN
+	DELETE FROM `message_record`
+	WHERE `message_record`.`sender_uid`=OLD.`own_uid`
+		AND `message_record`.`receiver_uid`=OLD.`friend_uid`;
 END
 ```

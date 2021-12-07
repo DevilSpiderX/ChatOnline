@@ -346,6 +346,10 @@ public class MainServlet extends HttpServlet {
                 if (count == 2) {
                     respJson.put("code", "0");
                     respJson.put("msg", "添加成功");
+                    COWebSocket friendWS = COWebSocket.getWebSocket(friend_uid);
+                    if (friendWS != null) {
+                        friendWS.friendInfoUpdate();
+                    }
                 } else {
                     respJson.put("code", "1");
                     respJson.put("msg", "添加失败");
@@ -404,6 +408,10 @@ public class MainServlet extends HttpServlet {
                     }
                     respJson.put("code", "0");
                     respJson.put("msg", "删除成功");
+                    COWebSocket friendWS = COWebSocket.getWebSocket(friend_uid);
+                    if (friendWS != null) {
+                        friendWS.friendInfoUpdate();
+                    }
                 } else {
                     respJson.put("code", "1");
                     respJson.put("msg", "删除失败");
@@ -645,6 +653,15 @@ public class MainServlet extends HttpServlet {
                 if (count == 1) {
                     respJson.put("code", "0");
                     respJson.put("msg", "更新成功");
+                    Condition con = new ConditionImpl();
+                    List<Friends> friends = suidRich.select(new Friends(own_uid));
+                    for (Friends friend : friends) {
+                        String friend_uid = friend.getFriendUid();
+                        COWebSocket friendWS = COWebSocket.getWebSocket(friend_uid);
+                        if (friendWS != null) {
+                            friendWS.friendInfoUpdate();
+                        }
+                    }
                 } else {
                     respJson.put("code", "1");
                     respJson.put("msg", "更新失败（数据库原因）");

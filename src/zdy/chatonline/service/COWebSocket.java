@@ -42,7 +42,7 @@ public class COWebSocket {
     public void onOpen(@PathParam("uid") String uid, @PathParam("token") String token, Session session)
             throws IOException {
         COWebSocket oldWebSocket;
-        if ((oldWebSocket = webSocketMap.get(uid)) != null) {
+        if ((oldWebSocket = getWebSocket(uid)) != null) {
             /*
                 被挤出在线状态，强制下线
 
@@ -195,7 +195,7 @@ public class COWebSocket {
                     msgRcd.setSenderUid(uid);
                     msgRcd.setReceiverUid(receiver_uid);
 
-                    COWebSocket socket = COWebSocket.webSocketMap.get(receiver_uid);
+                    COWebSocket socket = getWebSocket(receiver_uid);
                     if (socket != null) {
                         JSONObject acceptMsgJson = new JSONObject();
                         acceptMsgJson.put("cmd", "acceptMessage");
@@ -241,6 +241,10 @@ public class COWebSocket {
         sendThread.sendMessage(message);
     }
 
+    public static COWebSocket getWebSocket(String uid) {
+        return webSocketMap.get(uid);
+    }
+
     private void appendLog(String msg) {
         JSONObject logData = new JSONObject();
         LocalDateTime time = LocalDateTime.now();
@@ -260,6 +264,17 @@ public class COWebSocket {
     private void print(String address, String msg) {
         System.out.println(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss"
                 , Locale.CHINA)) + "\r\nCOWebSocket信息: " + (counter++) + ".（" + address + "） " + msg);
+    }
+
+    /*
+        好友信息更新
+     */
+    public void friendInfoUpdate() {
+        JSONObject respJson = new JSONObject();
+        respJson.put("cmd", "friendInfoUpdate");
+        respJson.put("code", "0");
+        respJson.put("msg", "好友信息已更新，请重新查询");
+        sendMessage(respJson.toJSONString());
     }
 
     private class SendMessageThread extends Thread {

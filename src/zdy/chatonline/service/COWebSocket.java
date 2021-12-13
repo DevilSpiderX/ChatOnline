@@ -37,6 +37,7 @@ public class COWebSocket {
     private HttpSession httpSession;
     private String address = "0.0.0.0:0";
     private SendMessageThread sendThread;
+    private boolean forcedOffline = false;
 
     @OnOpen
     public void onOpen(@PathParam("uid") String uid, @PathParam("token") String token, Session session)
@@ -54,6 +55,7 @@ public class COWebSocket {
             offlineJson.put("code", "0");
             offlineJson.put("msg", "您的账号在别的客户端登录，您将被强制下线");
             oldWebSocket.sendMessage(offlineJson.toJSONString());
+            oldWebSocket.forcedOffline = true;
         }
         this.session = session;
         this.uid = uid;
@@ -103,7 +105,9 @@ public class COWebSocket {
 
     @OnClose
     public void onClose(CloseReason reason) {
-        webSocketMap.remove(uid);
+        if (!forcedOffline) {
+            webSocketMap.remove(uid);
+        }
         subOnlineCount();
         print(address, "客户端" + this.uid + "退出");
         print(address, "当前在线用户数为：" + getOnlineCount());

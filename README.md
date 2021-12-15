@@ -106,3 +106,5 @@ BEGIN
 		AND `message_record`.`receiver_uid`=OLD.`friend_uid`;
 END
 ```
+# 客户端源码
+- [在线聊天系统客户端](https://github.com/DevilSpiderX/ChatOnlineWeb)

@@ -16,7 +16,6 @@ import zdy.chatonline.sql.FriendMessageView;
 import zdy.chatonline.sql.Friends;
 import zdy.chatonline.sql.User;
 
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,7 +30,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-@WebServlet(urlPatterns = "/*", name = "Main")
 public class MainServlet extends HttpServlet {
     private final static Log log = new Log();
     private int counter = 0;
@@ -144,7 +142,7 @@ public class MainServlet extends HttpServlet {
                 String pwd = reqBody.getString("pwd");
                 User qUser = new User(uid);
                 List<User> users = suidRich.select(qUser, "uid,password,nickname");
-                if (users.size() == 0) {
+                if (users.isEmpty()) {
                     respJson.put("code", "4");
                     respJson.put("msg", "uid不存在");
                 } else {
@@ -342,7 +340,10 @@ public class MainServlet extends HttpServlet {
                 friends[1].setOwnUid(friend_uid);
                 friends[1].setFriendUid(own_uid);
 
-                int count = suidRich.insert(friends);
+                int count = 0;
+                for (Friends f : friends) {
+                    count += suidRich.insert(f);
+                }
                 if (count == 2) {
                     respJson.put("code", "0");
                     respJson.put("msg", "添加成功");
@@ -402,7 +403,7 @@ public class MainServlet extends HttpServlet {
                         .op("own_uid", Op.equal, friend_uid).and().op("friend_uid", Op.equal, own_uid);
                 List<Friends> friendsList = suidRich.select(new Friends(), con);
 
-                if (friendsList.size() == 2) {
+                if (friendsList.size() >= 2) {
                     for (Friends friends : friendsList) {
                         suidRich.delete(friends);
                     }
@@ -653,7 +654,6 @@ public class MainServlet extends HttpServlet {
                 if (count == 1) {
                     respJson.put("code", "0");
                     respJson.put("msg", "更新成功");
-                    Condition con = new ConditionImpl();
                     List<Friends> friends = suidRich.select(new Friends(own_uid));
                     for (Friends friend : friends) {
                         String friend_uid = friend.getFriendUid();
@@ -665,6 +665,65 @@ public class MainServlet extends HttpServlet {
                 } else {
                     respJson.put("code", "1");
                     respJson.put("msg", "更新失败（数据库原因）");
+                }
+                respBody.add(respJson.toJSONString());
+                break;
+            }
+            /*
+                修改密码
+
+                应包含参数：own_uid, pwd, new_pwd
+                返回代码：0 成功；1 失败；2 own_uid参数不存在；3 pwd参数不存在；4 new_pwd参数不存在；5 uid不存在；6 原密码错误；
+             */
+            case "/updatePassword": {
+                resp.setStatus(HttpServletResponse.SC_OK);
+                resp.addHeader("Content-type", "application/json");
+
+                JSONObject respJson = new JSONObject();
+                if (!reqBody.contains("own_uid")) {
+                    respJson.put("code", "2");
+                    respJson.put("msg", "own_uid参数不存在");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+                if (!reqBody.contains("pwd")) {
+                    respJson.put("code", "3");
+                    respJson.put("msg", "pwd参数不存在");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+                if (!reqBody.contains("new_pwd")) {
+                    respJson.put("code", "4");
+                    respJson.put("msg", "new_pwd参数不存在");
+                    respBody.add(respJson.toJSONString());
+                    break;
+                }
+                String own_uid = reqBody.getString("own_uid");
+                String pwd = reqBody.getString("pwd");
+                String new_pwd = reqBody.getString("new_pwd");
+
+                SuidRich suidRich = BeeFactory.getHoneyFactory().getSuidRich();
+                User qUser = new User(own_uid);
+                List<User> users = suidRich.select(qUser, "uid,password");
+                if (users.isEmpty()) {
+                    respJson.put("code", "5");
+                    respJson.put("msg", "uid不存在");
+                } else {
+                    User user = users.get(0);
+                    if (pwd.equals(user.getPassword())) {
+                        user.setPassword(new_pwd);
+                        int count = suidRich.update(user, "password");
+                        if (count >= 1) {
+                            respJson.put("code", "0");
+                            respJson.put("msg", "成功");
+                        } else {
+                            respJson.put("code", "1");
+                            respJson.put("msg", "失败");
+                        }
+                    } else {
+                        respJson.put("code", "6");
+                        respJson.put("msg", "原密码错误");
+                    }
                 }
                 respBody.add(respJson.toJSONString());
                 break;

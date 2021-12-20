@@ -57,7 +57,7 @@ public class MainServlet extends HttpServlet {
         } else if (path.equals("/index.html") && !reqQuery.contains("uid")) {
             resp.sendRedirect("/login.html");
         } else {
-            Path filepath = Paths.get(Constant.configs.getString("WEB_DIRECTORY"), path);
+            Path filepath = Paths.get(Constant.WEB_DIRECTORY, path);
             InputStream fileInputStream;
             if (filepath.toFile().canRead()) {
                 fileInputStream = Files.newInputStream(filepath);

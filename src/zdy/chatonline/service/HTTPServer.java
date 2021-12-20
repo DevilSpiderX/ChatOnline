@@ -20,7 +20,7 @@ public class HTTPServer {
         tomcat.setPort(port);
         tomcat.getConnector();
 
-        Context ctx = tomcat.addWebapp("", new File(Constant.configs.getString("WEB_DIRECTORY")).
+        Context ctx = tomcat.addWebapp("", new File(Constant.WEB_DIRECTORY).
                 getAbsolutePath());
         Tomcat.addServlet(ctx, "Main", new MainServlet());
         Tomcat.addServlet(ctx, "Error", new ErrorServlet());
@@ -60,7 +60,7 @@ public class HTTPServer {
     }
 
     public void setErrorPage(Context ctx) {
-        JSONArray pageConfigs = Constant.configs.getJSONArray("ERROR_PAGE");
+        JSONArray pageConfigs = Constant.ERROR_PAGE;
         for (int i = 0; i < pageConfigs.size(); i++) {
             JSONObject pageConfig = pageConfigs.getJSONObject(i);
             ErrorPage page = new ErrorPage();

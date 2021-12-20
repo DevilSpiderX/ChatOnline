@@ -38,7 +38,7 @@ public class ErrorServlet extends HttpServlet {
 
     private void doing(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         ResponseBody respBody = new ResponseBody(resp);
-        Path filepath = Paths.get(Constant.configs.getString("WEB_DIRECTORY"), req.getRequestURI());
+        Path filepath = Paths.get(Constant.WEB_DIRECTORY, req.getRequestURI());
         InputStream fileInputStream = Files.newInputStream(filepath);
         resp.addHeader("Content-type", "text/html;charset=utf-8");
         respBody.addFromStream(fileInputStream);

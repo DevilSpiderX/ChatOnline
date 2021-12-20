@@ -67,7 +67,7 @@ public class Log {
     }
 
     private static class GarbageCollection extends Thread {
-        private static final int LOG_MAX_NUMBER = Constant.configs.getInteger("LOG_MAX_NUMBER");
+        private static final int LOG_MAX_NUMBER = Constant.LOG_MAX_NUMBER;
 
         static {
             if (LOG_MAX_NUMBER <= 0) {

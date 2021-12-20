@@ -7,6 +7,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/Log" />
       <excludeFolder url="file://$MODULE_DIR$/tomcat.80" />
+      <excludeFolder url="file://$MODULE_DIR$/tomcat.8080" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

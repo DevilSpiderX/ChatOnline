@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
+import org.apache.catalina.connector.Connector;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.tomcat.util.descriptor.web.ErrorPage;
 import zdy.chatonline.Constant;
@@ -17,8 +18,9 @@ public class HTTPServer {
     public HTTPServer(int port) {
         this.port = port;
         tomcat = new Tomcat();
-        tomcat.setPort(port);
-        tomcat.getConnector();
+        Connector connector = new Connector();
+        connector.setPort(port);
+        tomcat.setConnector(connector);
 
         Context ctx = tomcat.addWebapp("", new File(Constant.WEB_DIRECTORY).
                 getAbsolutePath());

@@ -2,12 +2,12 @@ package zdy.chatonline.service;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import org.apache.catalina.servlets.DefaultServlet;
 import org.teasoft.bee.osql.Condition;
 import org.teasoft.bee.osql.Op;
 import org.teasoft.bee.osql.SuidRich;
 import org.teasoft.honey.osql.core.BeeFactory;
 import org.teasoft.honey.osql.core.ConditionImpl;
-import zdy.chatonline.Constant;
 import zdy.chatonline.log.Log;
 import zdy.chatonline.service.request.RequestBody;
 import zdy.chatonline.service.request.RequestQuery;
@@ -16,36 +16,38 @@ import zdy.chatonline.sql.FriendMessageView;
 import zdy.chatonline.sql.Friends;
 import zdy.chatonline.sql.User;
 
-import javax.servlet.http.*;
+import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-public class MainServlet extends HttpServlet {
+public class MainServlet extends DefaultServlet {
     private final static Log log = new Log();
-    private int counter = 0;
+    private long counter = 0;
     private static final Map<String, HttpSession> UID_SESSION = new HashMap<>();
     private static final Map<String, String> tokens = new HashMap<>();
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         RequestQuery reqQuery = new RequestQuery(req.getQueryString());
         ResponseBody respBody = new ResponseBody(resp);
         String path = req.getRequestURI();
         HttpSession session = req.getSession();
 
-        System.out.println(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss"
-                , Locale.CHINA)) + "\r\nMainServlet信息: " + (counter++) + ".（" + req.getRemoteAddr() + ":"
-                + req.getRemotePort() + "） GET " + path + " " + req.getProtocol() + " " + reqQuery);
+        System.out.println(
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss", Locale.CHINA))
+                        + "\r\nMainServlet信息: " + (counter++) + ".（" + req.getRemoteAddr() + ":"
+                        + req.getRemotePort() + "） GET " + path + " " + req.getProtocol() + " " + reqQuery
+        );
 
         if (path.equals("/")) {
             if (isLoggedIn(session)) {
@@ -54,50 +56,13 @@ public class MainServlet extends HttpServlet {
             } else {
                 resp.sendRedirect("/login.html");
             }
-        } else if (path.equals("/index.html") && !reqQuery.contains("uid")) {
+            respBody.send();
+        } else if (path.equals("/index.html") && (!reqQuery.contains("uid") || !reqQuery.contains("token"))) {
             resp.sendRedirect("/login.html");
+            respBody.send();
         } else {
-            Path filepath = Paths.get(Constant.WEB_DIRECTORY, path);
-            InputStream fileInputStream;
-            if (filepath.toFile().canRead()) {
-                fileInputStream = Files.newInputStream(filepath);
-                if (path.endsWith(".html")) {//HTML网页
-                    resp.setStatus(HttpServletResponse.SC_OK);
-                    resp.addHeader("Content-type", "text/html;charset=utf-8");
-                    respBody.addFromStream(fileInputStream);
-                } else if (path.endsWith(".css")) {//css文件
-                    resp.setStatus(HttpServletResponse.SC_OK);
-                    resp.addHeader("Content-type", "text/css;charset=utf-8");
-                    respBody.addFromStream(fileInputStream);
-                } else if (path.endsWith(".js")) {
-                    resp.setStatus(HttpServletResponse.SC_OK);
-                    resp.addHeader("Content-type", "application/x-javascript;charset=utf-8");
-                    respBody.addFromStream(fileInputStream);
-                } else if (path.endsWith(".ico")) {//图标文件
-                    resp.setStatus(HttpServletResponse.SC_OK);
-                    resp.addHeader("Content-type", "image/x-icon");
-                    respBody.addFromStream(fileInputStream);
-                } else if (path.endsWith(".jpg")) {
-                    resp.setStatus(HttpServletResponse.SC_OK);
-                    resp.addHeader("Content-type", "image/jpeg");
-                    respBody.addFromStream(fileInputStream);
-                } else if (path.endsWith(".png")) {
-                    resp.setStatus(HttpServletResponse.SC_OK);
-                    resp.addHeader("Content-type", "image/png");
-                    respBody.addFromStream(fileInputStream);
-                } else {
-                    resp.setStatus(HttpServletResponse.SC_OK);
-                    resp.addHeader("Content-type", "*/*");
-                    resp.addHeader("Content-Encoding", "UTF-8");
-                    respBody.addFromStream(fileInputStream);
-                }
-            } else {
-                resp.sendError(HttpServletResponse.SC_NOT_FOUND);
-                appendLog(req);
-                return;
-            }
+            super.doGet(req, resp);
         }
-        respBody.send();
         appendLog(req);
     }
 
@@ -108,9 +73,11 @@ public class MainServlet extends HttpServlet {
         String path = req.getRequestURI();
         HttpSession session = req.getSession();
 
-        System.out.println(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss"
-                , Locale.CHINA)) + "\r\nMainServlet信息: " + (counter++) + ".（" + req.getRemoteAddr() + ":"
-                + req.getRemotePort() + "） POST " + path + " " + req.getProtocol() + " " + reqBody);
+        System.out.println(
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss", Locale.CHINA))
+                        + "\r\nMainServlet信息: " + (counter++) + ".（" + req.getRemoteAddr() + ":"
+                        + req.getRemotePort() + "） POST " + path + " " + req.getProtocol() + " " + reqBody
+        );
 
         switch (path) {
             /*

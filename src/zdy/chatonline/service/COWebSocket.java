@@ -31,7 +31,7 @@ public class COWebSocket {
     private static final AtomicInteger onlineCount = new AtomicInteger(0);
     protected static ConcurrentHashMap<String, COWebSocket> webSocketMap = new ConcurrentHashMap<>();
     private final static Log log = new Log();
-    private static int counter = 0;
+    private static long counter = 0;
     private Session session = null;
     private String uid;
     private HttpSession httpSession;
@@ -266,8 +266,10 @@ public class COWebSocket {
     }
 
     private void print(String address, String msg) {
-        System.out.println(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss"
-                , Locale.CHINA)) + "\r\nCOWebSocket信息: " + (counter++) + ".（" + address + "） " + msg);
+        System.out.println(
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss", Locale.CHINA))
+                        + "\r\nCOWebSocket信息: " + (counter++) + ".（" + address + "） " + msg
+        );
     }
 
     /*
